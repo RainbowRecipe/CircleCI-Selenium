@@ -41,9 +41,9 @@ jobs:
             chmod 777 artifact.sh
             ls -la
             ./artifact.sh
-      - jira/notify:
-          pipeline_id: << pipeline.id >>
-          pipeline_number: << pipeline.number >>      
+      # - jira/notify:
+      #     pipeline_id: << pipeline.id >>
+      #     pipeline_number: << pipeline.number >>      
 
   deploy:
     working_directory: ~/Flask-calculator
