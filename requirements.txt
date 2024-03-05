@@ -1,7 +1,7 @@
 selenium==4.16.0
 Flask
 click
-itsdangerou
+itsdangerous
 Jinja2
 MarkupSafe
 Werkzeug
