@@ -22,7 +22,7 @@ jobs:
       - run:
           name: Set Selenium Container IP
           command: |
-            echo "export SELENIUM_CONTAINER_IP=$HOSTNAME" >> $BASH_ENV 
+            echo "export SELENIUM_CONTAINER_IP=$HOSTNAME" >> $BASH_ENV
       - run:
           name: Build Script
           command: |
@@ -31,11 +31,11 @@ jobs:
             ls -la
             ./build.sh
             pwd
-            ls -la     
-      - run: 
+            ls -la
+      - run:
           name: Python Version
           command: python3 --version
-      - run: 
+      - run:
           name: Test
           command: |
             cd /home/circleci
@@ -48,8 +48,8 @@ jobs:
             ls -la
             ./artifact.sh
       # - jira/notify:
-      #     pipeline_id: << pipeline.id >>
-      #     pipeline_number: << pipeline.number >>      
+      #   pipeline_id: << pipeline.id >>
+      #   pipeline_number: << pipeline.number >>
 
   deploy:
     working_directory: ~/Flask-calculator
@@ -72,24 +72,23 @@ jobs:
             chmod 777 artifact.sh
             ls -la
             ./artifact.sh
-            pwd 
+            pwd
             ls -lrth
             curl -sL https://aka.ms/InstallAzureCLIDeb | sudo bash
             az login --service-principal -u $AZURE_CLIENT_ID -p $AZURE_CLIENT_SECRET --tenant $AZURE_TENANT_ID
             az account set --subscription $AZURE_SUBSCRIPTION_ID
             az webapp deployment source config-zip -g $AZURE_RG_NAME -n $AZURE_WEBAPP_NAME --src *.zip
             az webapp up -n $AZURE_WEBAPP_NAME -g $AZURE_RG_NAME
-     
-      #New block added here to get the Selenium container IP
+      # New block added here to get the Selenium container IP
       - run:
           name: Get Selenium Container IP
           command: |
             SELENIUM_CONTAINER_IP=$(docker inspect --format '{{ (index .NetworkSettings.Networks "selenium/standalone-chrome").IPAddress }}' selenium/standalone-chrome)
             echo "Selenium Container IP: $SELENIUM_CONTAINER_IP"
-            echo "export SELENIUM_CONTAINER_IP=$SELENIUM_CONTAINER_IP" >> $BASH_ENV    
-      #New block ends here
-      
- run_tests:
+            echo "export SELENIUM_CONTAINER_IP=$SELENIUM_CONTAINER_IP" >> $BASH_ENV
+      # New block ends here
+
+  run_tests:
     working_directory: ~/Flask-calculator
     docker:
       - image: "cimg/python:3.9.9"
