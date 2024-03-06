@@ -79,14 +79,6 @@ jobs:
             az account set --subscription $AZURE_SUBSCRIPTION_ID
             az webapp deployment source config-zip -g $AZURE_RG_NAME -n $AZURE_WEBAPP_NAME --src *.zip
             az webapp up -n $AZURE_WEBAPP_NAME -g $AZURE_RG_NAME
-      # New block added here to get the Selenium container IP
-      - run:
-          name: Get Selenium Container IP
-          command: |
-            SELENIUM_CONTAINER_IP=$(docker inspect --format '{{ (index .NetworkSettings.Networks "selenium/standalone-chrome").IPAddress }}' selenium/standalone-chrome)
-            echo "Selenium Container IP: $SELENIUM_CONTAINER_IP"
-            echo "export SELENIUM_CONTAINER_IP=$SELENIUM_CONTAINER_IP" >> $BASH_ENV
-      # New block ends here
 
   run_tests:
     working_directory: ~/Flask-calculator
@@ -106,10 +98,10 @@ workflows:
     jobs:
       - builds:
           context: Jira
-      - run_tests:
-          requires:
-            - builds
       - deploy:
           requires:
-            - run_tests
+            - builds
           context: Jira
+      - run_tests:
+          requires:
+            - deploy
