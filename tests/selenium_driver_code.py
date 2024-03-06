@@ -7,9 +7,11 @@ from selenium.common.exceptions import TimeoutException
 import traceback
 import math
 
-# Start the browser session
+selenium_container_ip = os.environ.get("SELENIUM_CONTAINER_IP", "localhost")
+
+# Create a new instance of the webdriver
 driver = webdriver.Remote(
-    command_executor='http://localhost:4444/wd/hub',
+    command_executor=f"http://{selenium_container_ip}:4444/wd/hub",
     options=webdriver.ChromeOptions()
 )
 
