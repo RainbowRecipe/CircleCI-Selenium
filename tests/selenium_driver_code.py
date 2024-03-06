@@ -13,10 +13,9 @@ selenium_container_ip = os.environ.get("SELENIUM_CONTAINER_IP", "localhost")
 selenium_url = f"http://{selenium_container_ip}:4444/wd/hub"
 
 # Create a new instance of the webdriver
-capabilities = webdriver.DesiredCapabilities.CHROME.copy()
 driver = webdriver.Remote(
     command_executor=selenium_url,
-    desired_capabilities=capabilities
+    options=webdriver.ChromeOptions()
 )
 
 # Open the Flask app URL
