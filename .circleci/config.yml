@@ -1,22 +1,28 @@
 version: 2.1
+
 executors:
   python-executor:
     docker:
-      - image: cimg/python:3.9.9    
-      - image: selenium/standalone-chrome:latest  # Chrome Docker image with Selenium  
+      - image: cimg/python:3.9.9
+      - image: selenium/standalone-chrome:latest # Chrome Docker image with Selenium
+
 orbs:
-    python: circleci/python@2.1.1
-    jira: circleci/jira@2.1.0
- 
+  python: circleci/python@2.1.1
+  jira: circleci/jira@2.1.0
+
 jobs:
   builds:
     working_directory: ~/Flask-calculator
     executor: python-executor
     steps:
-      - checkout  # Checkout your source code
+      - checkout
       - run:
           name: Install dependencies
-          command: pip install -r requirements.txt   
+          command: pip install -r requirements.txt
+      - run:
+          name: Set Selenium Container IP
+          command: |
+            echo "export SELENIUM_CONTAINER_IP=$HOSTNAME" >> $BASH_ENV 
       - run:
           name: Build Script
           command: |
@@ -83,18 +89,14 @@ jobs:
             echo "export SELENIUM_CONTAINER_IP=$SELENIUM_CONTAINER_IP" >> $BASH_ENV    
       #New block ends here
       
-  run_tests:
+ run_tests:
     working_directory: ~/Flask-calculator
     docker:
       - image: "cimg/python:3.9.9"
-    steps: 
-      - checkout 
-      - python/install-packages: 
-          pkg-manager: pip 
-      - run: 
-           name: Run test
-           command: pytest
-      # Run Selenium tests
+    steps:
+      - checkout
+      - python/install-packages:
+          pkg-manager: pip
       - run:
           name: Run Selenium tests
           command: |
@@ -104,11 +106,11 @@ workflows:
   build_and_test_deploy:
     jobs:
       - builds:
-          context: Jira           
-      - deploy:
-          requires:
-            - builds
           context: Jira
       - run_tests:
           requires:
-            - deploy
+            - builds
+      - deploy:
+          requires:
+            - run_tests
+          context: Jira
