@@ -1,28 +1,22 @@
 version: 2.1
-
 executors:
   python-executor:
     docker:
-      - image: cimg/python:3.9.9
-      - image: selenium/standalone-chrome:latest # Chrome Docker image with Selenium
-
+      - image: cimg/python:3.9.9    
 orbs:
-  python: circleci/python@2.1.1
-  jira: circleci/jira@2.1.0
-
+    python: circleci/python@2.1.1
+    jira: circleci/jira@2.1.0
+    aws-cli: circleci/aws-cli@2.0.3
+ 
 jobs:
   builds:
     working_directory: ~/Flask-calculator
     executor: python-executor
     steps:
-      - checkout
+      - checkout  # Checkout your source code
       - run:
           name: Install dependencies
-          command: pip install -r requirements.txt
-      - run:
-          name: Set Selenium Container IP
-          command: |
-            echo "export SELENIUM_CONTAINER_IP=$HOSTNAME" >> $BASH_ENV
+          command: pip install -r requirements.txt   
       - run:
           name: Build Script
           command: |
@@ -31,11 +25,11 @@ jobs:
             ls -la
             ./build.sh
             pwd
-            ls -la
-      - run:
+            ls -la     
+      - run: 
           name: Python Version
           command: python3 --version
-      - run:
+      - run: 
           name: Test
           command: |
             cd /home/circleci
@@ -47,9 +41,9 @@ jobs:
             chmod 777 artifact.sh
             ls -la
             ./artifact.sh
-      # - jira/notify:
-      #   pipeline_id: << pipeline.id >>
-      #   pipeline_number: << pipeline.number >>
+      - jira/notify:
+          pipeline_id: << pipeline.id >>
+          pipeline_number: << pipeline.number >>      
 
   deploy:
     working_directory: ~/Flask-calculator
@@ -72,32 +66,46 @@ jobs:
             chmod 777 artifact.sh
             ls -la
             ./artifact.sh
-            pwd
+            pwd 
             ls -lrth
             curl -sL https://aka.ms/InstallAzureCLIDeb | sudo bash
             az login --service-principal -u $AZURE_CLIENT_ID -p $AZURE_CLIENT_SECRET --tenant $AZURE_TENANT_ID
             az account set --subscription $AZURE_SUBSCRIPTION_ID
             az webapp deployment source config-zip -g $AZURE_RG_NAME -n $AZURE_WEBAPP_NAME --src *.zip
             az webapp up -n $AZURE_WEBAPP_NAME -g $AZURE_RG_NAME
-
+  
   run_tests:
     working_directory: ~/Flask-calculator
     docker:
       - image: "cimg/python:3.9.9"
-    steps:
-      - checkout
-      - python/install-packages:
+    steps: 
+      - checkout 
+      - python/install-packages: 
           pkg-manager: pip
+      - aws-cli/setup
       - run:
-          name: Run Selenium tests
+          name: Run Selenium Tests on AWS EC2
           command: |
-            python tests/selenium_driver_code.py
+            mv /home/circleci/Flask-calculator/circleci.pem /home/circleci/
+            chmod 600 /home/circleci/circleci.pem
+            # Connect to the EC2 instance using the Elastic IP
+            ELASTIC_IP=34.207.198.25
+            ssh -o StrictHostKeyChecking=no -i /home/circleci/circleci.pem ec2-user@${ELASTIC_IP} '
+              # Navigate to the directory with your Selenium tests
+              cd /home/ec2-user/
+              
+              # Run your Selenium test scripts or test suite
+              python selenium_driver_code.py -v
+              
+              # Store test results on the EC2 instance
+              mv test-results.xml /home/ec2-user/test-results
+            '
 
 workflows:
   build_and_test_deploy:
     jobs:
       - builds:
-          context: Jira
+          context: Jira           
       - deploy:
           requires:
             - builds
@@ -105,3 +113,4 @@ workflows:
       - run_tests:
           requires:
             - deploy
+          
