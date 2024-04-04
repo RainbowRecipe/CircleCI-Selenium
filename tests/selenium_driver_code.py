@@ -8,19 +8,13 @@ import traceback
 import math
 import os
 
-# Get the Selenium container IP from the environment variable
-selenium_container_ip = os.environ.get("SELENIUM_CONTAINER_IP", "localhost")
-selenium_url = f"http://{selenium_container_ip}:4444/wd/hub"
-
-# Create a new instance of the webdriver
-driver = webdriver.Remote(
-    command_executor=selenium_url,
-    options=webdriver.ChromeOptions()
-)
+driver = webdriver.Chrome()
 
 # Open the Flask app URL
-app_url = 'circleci.azurewebsites.net'
+app_url = 'https://circleci.azurewebsites.net/'
+print("Navigating to:", app_url)
 driver.get(app_url)
+
 
 passed_tests = 0
 total_tests = 0
