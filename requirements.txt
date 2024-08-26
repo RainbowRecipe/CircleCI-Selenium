@@ -1,4 +1,5 @@
-selenium==4.16.0
+#Try selenium==4.16.0 if you face any problems with the latest Selenium version.
+selenium
 Flask
 click
 itsdangerous
