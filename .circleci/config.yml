@@ -2,18 +2,17 @@ version: 2.1
 executors:
   python-executor:
     docker:
-      - image: cimg/python:3.9.9    
+      - image: cimg/python:3.9.9
 orbs:
     python: circleci/python@2.1.1
-  
     aws-cli: circleci/aws-cli@2.0.3
- 
+    browser-tools: circleci/browser-tools@1.4.8
 jobs:
   builds:
     working_directory: ~/Flask-calculator
     executor: python-executor
     steps:
-      - checkout  # Checkout your source code
+      - checkout
       - run:
           name: Install dependencies
           command: pip install -r requirements.txt   
@@ -41,8 +40,6 @@ jobs:
             chmod 777 artifact.sh
             ls -la
             ./artifact.sh
-            
-
   deploy:
     working_directory: ~/Flask-calculator
     docker:
@@ -76,29 +73,31 @@ jobs:
     working_directory: ~/Flask-calculator
     docker:
       - image: "cimg/python:3.9.9"
+      - image: cimg/node:20.4.0-browsers
     steps: 
       - checkout 
       - python/install-packages: 
           pkg-manager: pip
       - aws-cli/setup
+      - browser-tools/install-chrome
+      - browser-tools/install-chromedriver
       - run:
-          name: Run Selenium Tests on AWS EC2
           command: |
-            mv /home/circleci/Flask-calculator/circleci.pem /home/circleci/
-            chmod 600 /home/circleci/circleci.pem
-            # Connect to the EC2 instance using the Elastic IP
-            ELASTIC_IP=34.207.198.25
-            ssh -o StrictHostKeyChecking=no -i /home/circleci/circleci.pem ec2-user@${ELASTIC_IP} '
-              # Navigate to the directory with your Selenium tests
-              cd /home/ec2-user/
-              
-              # Run your Selenium test scripts or test suite
-              python selenium_driver_code.py -v
-              
-              # Store test results on the EC2 instance
-              mv test-results.xml /home/ec2-user/test-results
-            '
-
+            google-chrome --version
+            chromedriver --version
+          name: Check install
+      - run:
+          name: Run Selenium Tests
+          command: |
+            whereis chrome
+            pwd
+            ls -lrtha
+            chmod 777 build.sh
+            ./build.sh 
+            ls -lrtha
+            cd tests
+            chmod 777 selenium_driver_code.py
+            python selenium_driver_code.py
 workflows:
   build_and_test_deploy:
     jobs:
@@ -111,4 +110,3 @@ workflows:
       - run_tests:
           requires:
             - deploy
-          
